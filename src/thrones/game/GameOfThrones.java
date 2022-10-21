@@ -3,18 +3,12 @@ package thrones.game;
 // Oh_Heaven.java
 
 import ch.aplu.jcardgame.*;
-import ch.aplu.jgamegrid.*;
 
-
-import java.awt.Color;
-import java.awt.Font;
-import java.io.FileReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 @SuppressWarnings("serial")
-//public class GameOfThrones extends CardGame {
 public class GameOfThrones {
 
 
@@ -87,64 +81,23 @@ public class GameOfThrones {
     public final int nbStartCards = 9;
 	public final int nbPlays = 6;
 	public final int nbRounds = 3;
-    private final int handWidth = 400;
-    private final int pileWidth = 40;
+
     private Deck deck = new Deck(GoTCard.Suit.values(), GoTCard.Rank.values(), "cover");
 
 
-//    private Actor[] pileTextActors = { null, null };
-//    private Actor[] scoreActors = {null, null, null, null};
     private final int watchingTime = 5000;
     private Hand[] hands;
     private Hand[] piles;
-    private final String[] playerTeams = { "[Players 0 & 2]", "[Players 1 & 3]"};
     private int nextStartingPlayer = random.nextInt(nbPlayers);
 
 
     private int[] scores = new int[nbPlayers];
 
-    Font bigFont = new Font("Arial", Font.BOLD, 36);
-    Font smallFont = new Font("Arial", Font.PLAIN, 10);
+
 
     // boolean[] humanPlayers = { true, false, false, false};
     boolean[] humanPlayers = { false, false, false, false};
 
-
-//    private void initScore() {
-//        for (int i = 0; i < nbPlayers; i++) {
-//             scores[i] = 0;
-//             dm.printScore(i);
-////            String text = "P" + i + "-0";
-////            scoreActors[i] = new TextActor(text, Color.WHITE, bgColor, bigFont);
-////            addActor(scoreActors[i], scoreLocations[i]);
-//        }
-//
-//        dm.printPileText();
-//
-////        String text = "Attack: 0 - Defence: 0";
-////        for (int i = 0; i < pileTextActors.length; i++) {
-////            pileTextActors[i] = new TextActor(text, Color.WHITE, bgColor, smallFont);
-////            addActor(pileTextActors[i], pileStatusLocations[i]);
-////        }
-//    }
-
-
-//    private void updateScore(int player) {
-//
-//        dm.updateScore(player, scores);
-//
-////        removeActor(scoreActors[player]);
-////        String text = "P" + player + "-" + scores[player];
-////        scoreActors[player] = new TextActor(text, Color.WHITE, bgColor, bigFont);
-////        addActor(scoreActors[player], scoreLocations[player]);
-//    }
-//
-//    private void updateScores() {
-//        for (int i = 0; i < nbPlayers; i++) {
-//            updateScore(i);
-//        }
-//        System.out.println(playerTeams[0] + " score = " + scores[0] + "; " + playerTeams[1] + " score = " + scores[1]);
-//    }
 
     private Optional<Card> selected;
     private final int NON_SELECTION_VALUE = -1;
@@ -181,12 +134,6 @@ public class GameOfThrones {
         RowLayout[] layouts = new RowLayout[nbPlayers];
         for (int i = 0; i < nbPlayers; i++) {
             dm.displayGraphic(layouts, hands,i);
-
-//
-//            layouts[i] = new RowLayout(handLocations[i], handWidth);
-//            layouts[i].setRotationAngle(90 * i);
-//            hands[i].setView(this, layouts[i]);
-//            hands[i].draw();
         }
         // End graphics
     }
@@ -272,9 +219,6 @@ public class GameOfThrones {
 
             dm.displayPile(piles[i],i);
 
-//            piles[i] = new Hand(deck);
-//            piles[i].setView(this, new RowLayout(pileLocations[i], 8 * pileWidth));
-//            piles[i].draw();
             final Hand currentPile = piles[i];
             final int pileIndex = i;
             piles[i].addCardListener(new CardAdapter() {
@@ -285,31 +229,21 @@ public class GameOfThrones {
             });
         }
 
-        this.updatePileRanks();
+        sm.updatePileRanks(piles);
     }
 
-//    private void updatePileRankState(int pileIndex, int attackRank, int defenceRank) {
-
-
-//        TextActor currentPile = (TextActor) pileTextActors[pileIndex];
-//        removeActor(currentPile);
-//        String text = playerTeams[pileIndex] + " Attack: " + attackRank + " - Defence: " + defenceRank;
-//        pileTextActors[pileIndex] = new TextActor(text, Color.WHITE, bgColor, smallFont);
-//        addActor(pileTextActors[pileIndex], pileStatusLocations[pileIndex]);
+//    int[] calculatePileRanks(int pileIndex) {
+//        Hand currentPile = piles[pileIndex];
+//        int i = currentPile.isEmpty() ? 0 : ((GoTCard.Rank) currentPile.get(0).getRank()).getRankValue();
+//        return new int[] { i, i };
 //    }
 
-    int[] calculatePileRanks(int pileIndex) {
-        Hand currentPile = piles[pileIndex];
-        int i = currentPile.isEmpty() ? 0 : ((GoTCard.Rank) currentPile.get(0).getRank()).getRankValue();
-        return new int[] { i, i };
-    }
-
-    public void updatePileRanks() {
-        for (int j = 0; j <  piles.length; j++) {
-            int[] ranks = calculatePileRanks(j);
-            dm.updatePileRankState(j, ranks[ATTACK_RANK_INDEX], ranks[DEFENCE_RANK_INDEX]);
-        }
-    }
+//    public void updatePileRanks() {
+//        for (int j = 0; j <  piles.length; j++) {
+//            int[] ranks = calculatePileRanks(j);
+//            dm.updatePileRankState(j, ranks[ATTACK_RANK_INDEX], ranks[DEFENCE_RANK_INDEX]);
+//        }
+//    }
 
     private void executeAPlay() {
         resetPile();
@@ -334,7 +268,7 @@ public class GameOfThrones {
             System.out.println("Player " + playerIndex + " plays " + canonical(selected.get()) + " on pile " + pileIndex);
             selected.get().setVerso(false);
             selected.get().transfer(piles[pileIndex], true); // transfer to pile (includes graphic effect)
-            updatePileRanks();
+            sm.updatePileRanks(piles);
         }
 
         // 2: play the remaining nbPlayers * nbRounds - 2
@@ -360,7 +294,7 @@ public class GameOfThrones {
                 System.out.println("Player " + nextPlayer + " plays " + canonical(selected.get()) + " on pile " + selectedPileIndex);
                 selected.get().setVerso(false);
                 selected.get().transfer(piles[selectedPileIndex], true); // transfer to pile (includes graphic effect)
-                updatePileRanks();
+                sm.updatePileRanks(piles);
             } else {
                 dm.setStatusText("Pass.");
             }
@@ -369,9 +303,9 @@ public class GameOfThrones {
         }
 
         // 3: calculate winning & update scores for players
-        updatePileRanks();
-        int[] pile0Ranks = calculatePileRanks(0);
-        int[] pile1Ranks = calculatePileRanks(1);
+        sm.updatePileRanks(piles);
+        int[] pile0Ranks = sm.calculatePileRanks(0, piles);
+        int[] pile1Ranks = sm.calculatePileRanks(1, piles);
         System.out.println("piles[0]: " + canonical(piles[0]));
         System.out.println("piles[0] is " + "Attack: " + pile0Ranks[ATTACK_RANK_INDEX] + " - Defence: " + pile0Ranks[DEFENCE_RANK_INDEX]);
         System.out.println("piles[1]: " + canonical(piles[1]));
@@ -415,7 +349,6 @@ public class GameOfThrones {
 
         dm =  DisplayManager.getInstance();
         sm = new ScoreManager(dm);
-//        initScore();
 
         setupGame();
         for (int i = 0; i < nbPlays; i++) {
@@ -423,18 +356,6 @@ public class GameOfThrones {
             sm.updateScores();
         }
         dm.printResult(scores);
-
-//        String text;
-//        if (scores[0] > scores[1]) {
-//            text = "Players 0 and 2 won.";
-//        } else if (scores[0] == scores[1]) {
-//            text = "All players drew.";
-//        } else {
-//            text = "Players 1 and 3 won.";
-//        }
-//        System.out.println("Result: " + text);
-//        dm.setStatusText(text);
-
         dm.refresh();
     }
 

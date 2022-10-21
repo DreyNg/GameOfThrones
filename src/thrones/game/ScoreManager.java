@@ -1,11 +1,15 @@
 package thrones.game;
 
+import ch.aplu.jcardgame.Hand;
+
 public class ScoreManager {
 
     public final int nbPlayers = 4;
     private int[] scores = new int[nbPlayers];
     private DisplayManager dm;
     private final String[] playerTeams = { "[Players 0 & 2]", "[Players 1 & 3]"};
+    private final int ATTACK_RANK_INDEX = 0;
+    private final int DEFENCE_RANK_INDEX = 1;
 
     public ScoreManager(DisplayManager dm){
         this.dm = dm;
@@ -19,14 +23,22 @@ public class ScoreManager {
             dm.printScore(i);
         }
         dm.printPileText();
-
-//        String text = "Attack: 0 - Defence: 0";
-//        for (int i = 0; i < pileTextActors.length; i++) {
-//            pileTextActors[i] = new TextActor(text, Color.WHITE, bgColor, smallFont);
-//            addActor(pileTextActors[i], pileStatusLocations[i]);
-//        }
     }
 
+
+    public int[] calculatePileRanks(int pileIndex, Hand[] piles) {
+        Hand currentPile = piles[pileIndex];
+        int i = currentPile.isEmpty() ? 0 : ((GoTCard.Rank) currentPile.get(0).getRank()).getRankValue();
+        return new int[] { i, i };
+    }
+
+
+    public void updatePileRanks(Hand[] piles) {
+        for (int j = 0; j <  piles.length; j++) {
+            int[] ranks = calculatePileRanks(j, piles);
+            dm.updatePileRankState(j, ranks[ATTACK_RANK_INDEX], ranks[DEFENCE_RANK_INDEX]);
+        }
+    }
 
     public void updateScores() {
         for (int i = 0; i < nbPlayers; i++) {
