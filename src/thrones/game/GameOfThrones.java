@@ -4,7 +4,6 @@ package thrones.game;
 
 import ch.aplu.jcardgame.*;
 import ch.aplu.jgamegrid.*;
-import src.utility.PropertiesLoader;
 
 
 import java.awt.Color;
@@ -13,48 +12,22 @@ import java.io.FileReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @SuppressWarnings("serial")
 public class GameOfThrones extends CardGame {
+//public class GameOfThrones {
 
-    enum GoTSuit { CHARACTER, DEFENCE, ATTACK, MAGIC }
-    public enum Suit {
-        SPADES(GoTSuit.DEFENCE),
-        HEARTS(GoTSuit.CHARACTER),
-        DIAMONDS(GoTSuit.MAGIC),
-        CLUBS(GoTSuit.ATTACK);
-        Suit(GoTSuit gotsuit) {
-            this.gotsuit = gotsuit;
-        }
-        private final GoTSuit gotsuit;
 
-        public boolean isDefence(){ return gotsuit == GoTSuit.DEFENCE; }
 
-        public boolean isAttack(){ return gotsuit == GoTSuit.ATTACK; }
 
-        public boolean isCharacter(){ return gotsuit == GoTSuit.CHARACTER; }
+    static public int seed;
+    static Random random;
+    private DisplayManager dm;
 
-        public boolean isMagic(){ return gotsuit == GoTSuit.MAGIC; }
-    }
 
-    public enum Rank {
-        // Reverse order of rank importance (see rankGreater() below)
-        // Order of cards is tied to card images
-        ACE(1), KING(10), QUEEN(10), JACK(10), TEN(10), NINE(9), EIGHT(8), SEVEN(7), SIX(6), FIVE(5), FOUR(4), THREE(3), TWO(2);
-        Rank(int rankValue) {
-            this.rankValue = rankValue;
-        }
-        private final int rankValue;
-        public int getRankValue() {
-            return rankValue;
-        }
-    }
+    public String canonical(GoTCard.Suit s) { return s.toString().substring(0, 1); }
 
-    /*
-    Canonical String representations of Suit, Rank, Card, and Hand
-    */
-    String canonical(Suit s) { return s.toString().substring(0, 1); }
-
-    String canonical(Rank r) {
+    public String canonical(GoTCard.Rank r) {
         switch (r) {
             case ACE: case KING: case QUEEN: case JACK: case TEN:
                 return r.toString().substring(0, 1);
@@ -63,14 +36,11 @@ public class GameOfThrones extends CardGame {
         }
     }
 
-    String canonical(Card c) { return canonical((Rank) c.getRank()) + canonical((Suit) c.getSuit()); }
+    public String canonical(Card c) { return canonical((GoTCard.Rank) c.getRank()) + canonical((GoTCard.Suit) c.getSuit()); }
 
-    String canonical(Hand h) {
+    public String canonical(Hand h) {
         return "[" + h.getCardList().stream().map(this::canonical).collect(Collectors.joining(",")) + "]";
     }
-    static public int seed;
-    static Random random;
-
     // return random Card from Hand
     public static Card randomCard(Hand hand) {
         assert !hand.isEmpty() : " random card from empty hand.";
@@ -82,7 +52,7 @@ public class GameOfThrones extends CardGame {
         Hand pack = deck.toHand(false);
         assert pack.getNumberOfCards() == 52 : " Starting pack is not 52 cards.";
         // Remove 4 Aces
-        List<Card> aceCards = pack.getCardsWithRank(Rank.ACE);
+        List<Card> aceCards = pack.getCardsWithRank(GoTCard.Rank.ACE);
         for (Card card : aceCards) {
             card.removeFromHand(false);
         }
@@ -90,7 +60,7 @@ public class GameOfThrones extends CardGame {
         // Give each player 3 heart cards
         for (int i = 0; i < nbPlayers; i++) {
             for (int j = 0; j < 3; j++) {
-                List<Card> heartCards = pack.getCardsWithSuit(Suit.HEARTS);
+                List<Card> heartCards = pack.getCardsWithSuit(GoTCard.Suit.HEARTS);
                 int x = random.nextInt(heartCards.size());
                 Card randomCard = heartCards.get(x);
                 randomCard.removeFromHand(false);
@@ -119,36 +89,17 @@ public class GameOfThrones extends CardGame {
 	public final int nbRounds = 3;
     private final int handWidth = 400;
     private final int pileWidth = 40;
-    private Deck deck = new Deck(Suit.values(), Rank.values(), "cover");
-    private final Location[] handLocations = {
-            new Location(350, 625),
-            new Location(75, 350),
-            new Location(350, 75),
-            new Location(625, 350)
-    };
+    private Deck deck = new Deck(GoTCard.Suit.values(), GoTCard.Rank.values(), "cover");
 
-    private final Location[] scoreLocations = {
-            new Location(575, 675),
-            new Location(25, 575),
-            new Location(25, 25),
-            new Location(575, 125)
-    };
-    private final Location[] pileLocations = {
-            new Location(350, 280),
-            new Location(350, 430)
-    };
-    private final Location[] pileStatusLocations = {
-            new Location(250, 200),
-            new Location(250, 520)
-    };
 
-    private Actor[] pileTextActors = { null, null };
-    private Actor[] scoreActors = {null, null, null, null};
+//    private Actor[] pileTextActors = { null, null };
+//    private Actor[] scoreActors = {null, null, null, null};
     private final int watchingTime = 5000;
     private Hand[] hands;
     private Hand[] piles;
     private final String[] playerTeams = { "[Players 0 & 2]", "[Players 1 & 3]"};
     private int nextStartingPlayer = random.nextInt(nbPlayers);
+
 
     private int[] scores = new int[nbPlayers];
 
@@ -156,29 +107,36 @@ public class GameOfThrones extends CardGame {
     Font smallFont = new Font("Arial", Font.PLAIN, 10);
 
     // boolean[] humanPlayers = { true, false, false, false};
-    boolean[] humanPlayers = { true, false, false, false};
+    boolean[] humanPlayers = { false, false, false, false};
 
 
     private void initScore() {
         for (int i = 0; i < nbPlayers; i++) {
              scores[i] = 0;
-            String text = "P" + i + "-0";
-            scoreActors[i] = new TextActor(text, Color.WHITE, bgColor, bigFont);
-            addActor(scoreActors[i], scoreLocations[i]);
+             dm.printScore(i);
+//            String text = "P" + i + "-0";
+//            scoreActors[i] = new TextActor(text, Color.WHITE, bgColor, bigFont);
+//            addActor(scoreActors[i], scoreLocations[i]);
         }
 
-        String text = "Attack: 0 - Defence: 0";
-        for (int i = 0; i < pileTextActors.length; i++) {
-            pileTextActors[i] = new TextActor(text, Color.WHITE, bgColor, smallFont);
-            addActor(pileTextActors[i], pileStatusLocations[i]);
-        }
+        dm.printPileText();
+
+//        String text = "Attack: 0 - Defence: 0";
+//        for (int i = 0; i < pileTextActors.length; i++) {
+//            pileTextActors[i] = new TextActor(text, Color.WHITE, bgColor, smallFont);
+//            addActor(pileTextActors[i], pileStatusLocations[i]);
+//        }
     }
 
+
     private void updateScore(int player) {
-        removeActor(scoreActors[player]);
-        String text = "P" + player + "-" + scores[player];
-        scoreActors[player] = new TextActor(text, Color.WHITE, bgColor, bigFont);
-        addActor(scoreActors[player], scoreLocations[player]);
+
+        dm.updateScore(player, scores);
+
+//        removeActor(scoreActors[player]);
+//        String text = "P" + player + "-" + scores[player];
+//        scoreActors[player] = new TextActor(text, Color.WHITE, bgColor, bigFont);
+//        addActor(scoreActors[player], scoreLocations[player]);
     }
 
     private void updateScores() {
@@ -222,67 +180,28 @@ public class GameOfThrones extends CardGame {
         // graphics
         RowLayout[] layouts = new RowLayout[nbPlayers];
         for (int i = 0; i < nbPlayers; i++) {
-            layouts[i] = new RowLayout(handLocations[i], handWidth);
-            layouts[i].setRotationAngle(90 * i);
-            hands[i].setView(this, layouts[i]);
-            hands[i].draw();
+            dm.displayGraphic(layouts, hands,i);
+
+//
+//            layouts[i] = new RowLayout(handLocations[i], handWidth);
+//            layouts[i].setRotationAngle(90 * i);
+//            hands[i].setView(this, layouts[i]);
+//            hands[i].draw();
         }
         // End graphics
     }
 
-    private void resetPile() {
-        if (piles != null) {
-            for (Hand pile : piles) {
-                pile.removeAll(true);
-            }
-        }
-        piles = new Hand[2];
-        for (int i = 0; i < 2; i++) {
-            piles[i] = new Hand(deck);
-            piles[i].setView(this, new RowLayout(pileLocations[i], 8 * pileWidth));
-            piles[i].draw();
-            final Hand currentPile = piles[i];
-            final int pileIndex = i;
-            piles[i].addCardListener(new CardAdapter() {
-                public void leftClicked(Card card) {
-                    selectedPileIndex = pileIndex;
-                    currentPile.setTouchEnabled(false);
-                }
-            });
-        }
 
-        updatePileRanks();
-    }
 
-    private void pickACorrectSuit(int playerIndex, boolean isCharacter, boolean canBeMagic) {
+    private void pickACorrectSuit(int playerIndex, boolean isCharacter) {
         Hand currentHand = hands[playerIndex];
         List<Card> shortListCards = new ArrayList<>();
         for (int i = 0; i < currentHand.getCardList().size(); i++) {
             Card card = currentHand.getCardList().get(i);
-            Suit suit = (Suit) card.getSuit();
+            GoTCard.Suit suit = (GoTCard.Suit) card.getSuit();
             if (suit.isCharacter() == isCharacter) {
                 shortListCards.add(card);
             }
-
-            if(isCharacter){
-                if(suit.isCharacter()){
-                    shortListCards.add(card);
-                }
-            }
-
-            if(!isCharacter && !canBeMagic){
-                if(!suit.isCharacter() && !suit.isMagic()){
-                    shortListCards.add(card);
-                }
-            }
-
-            if(!isCharacter && canBeMagic){
-                if(!suit.isCharacter()){
-                    shortListCards.add(card);
-                }
-            }
-
-
         }
         if (shortListCards.isEmpty() || !isCharacter && random.nextInt(3) == 0) {
             selected = Optional.empty();
@@ -292,28 +211,10 @@ public class GameOfThrones extends CardGame {
     }
 
     private void selectRandomPile() {
-        Suit suit = selected.isPresent() ? (Suit) selected.get().getSuit() : null;
-        if(suit.isMagic()){
-            Suit topPile0 = (Suit) piles[0].getCardList().get(piles[0].getCardList().size()-1).getSuit();
-            Suit topPile1= (Suit) piles[1].getCardList().get(piles[1].getCardList().size()-1).getSuit();
-            if (topPile0.isCharacter()){
-                selectedPileIndex = 1;
-            }
-            else if (topPile1.isCharacter()){
-                selectedPileIndex = 0;
-            }else{
-                selectedPileIndex = random.nextInt(2);
-            }
-
-        }else{
-            selectedPileIndex = random.nextInt(2);
-        }
+        selectedPileIndex = random.nextInt(2);
     }
 
-
-
-
-    private void waitForCorrectSuit(int playerIndex, boolean isCharacter, boolean canBeMagic) {
+    private void waitForCorrectSuit(int playerIndex, boolean isCharacter) {
         if (hands[playerIndex].isEmpty()) {
             selected = Optional.empty();
         } else {
@@ -324,22 +225,12 @@ public class GameOfThrones extends CardGame {
                     delay(100);
                     continue;
                 }
-                Suit suit = selected.isPresent() ? (Suit) selected.get().getSuit() : null;
-//                if (isCharacter && suit != null && suit.isCharacter() ||         // If we want character, can't pass and suit must be right
-//                        !isCharacter && (suit == null || !suit.isCharacter())) { // If we don't want character, can pass or suit must not be character
-//                     if (suit != null && suit.isCharacter() == isCharacter) {
-
-                if (isCharacter && suit != null && suit.isCharacter()){
+                GoTCard.Suit suit = selected.isPresent() ? (GoTCard.Suit) selected.get().getSuit() : null;
+                if (isCharacter && suit != null && suit.isCharacter() ||         // If we want character, can't pass and suit must be right
+                        !isCharacter && (suit == null || !suit.isCharacter())) { // If we don't want character, can pass or suit must not be character
+                    // if (suit != null && suit.isCharacter() == isCharacter) {
                     break;
-                }
-                if (!isCharacter && !canBeMagic && (suit != null) && !suit.isCharacter() && !suit.isMagic()){
-                    break;
-                }
-                if (!isCharacter && canBeMagic && (suit != null) && !suit.isCharacter()){
-                    break;
-                }
-
-                else {
+                } else {
                     selected = null;
                     hands[playerIndex].setTouchEnabled(true);
                 }
@@ -348,77 +239,94 @@ public class GameOfThrones extends CardGame {
         }
     }
 
-
-
     private void waitForPileSelection() {
-        Suit suit = selected.isPresent() ? (Suit) selected.get().getSuit() : null;
-        int mustBe = NON_SELECTION_VALUE;
-        if(suit.isMagic()){
-            Suit topPile0 = (Suit) piles[0].getCardList().get(piles[0].getCardList().size()-1).getSuit();
-            Suit topPile1= (Suit) piles[1].getCardList().get(piles[1].getCardList().size()-1).getSuit();
-            if (topPile0.isCharacter()){
-                mustBe = 1;
-            }
-            if (topPile1.isCharacter()){
-                mustBe = 0;
-            }
-        }
-
         selectedPileIndex = NON_SELECTION_VALUE;
         for (Hand pile : piles) {
             pile.setTouchEnabled(true);
         }
-        while(selectedPileIndex == NON_SELECTION_VALUE||selectedPileIndex != mustBe && mustBe !=NON_SELECTION_VALUE) {
+        while(selectedPileIndex == NON_SELECTION_VALUE) {
             delay(100);
         }
-
         for (Hand pile : piles) {
             pile.setTouchEnabled(false);
         }
-
     }
 
-    private int[] calculatePileRanks(int pileIndex) {
-        Hand currentPile = piles[pileIndex];
-        int i = currentPile.isEmpty() ? 0 : ((Rank) currentPile.get(0).getRank()).getRankValue();
-        return new int[] { i, i };
-    }
 
-    private void updatePileRankState(int pileIndex, int attackRank, int defenceRank) {
-        TextActor currentPile = (TextActor) pileTextActors[pileIndex];
-        removeActor(currentPile);
-        String text = playerTeams[pileIndex] + " Attack: " + attackRank + " - Defence: " + defenceRank;
-        pileTextActors[pileIndex] = new TextActor(text, Color.WHITE, bgColor, smallFont);
-        addActor(pileTextActors[pileIndex], pileStatusLocations[pileIndex]);
-    }
 
-    private void updatePileRanks() {
-        for (int j = 0; j < piles.length; j++) {
-            int[] ranks = calculatePileRanks(j);
-            updatePileRankState(j, ranks[ATTACK_RANK_INDEX], ranks[DEFENCE_RANK_INDEX]);
-        }
-    }
+
 
     private int getPlayerIndex(int index) {
         return index % nbPlayers;
     }
 
+    void resetPile() {
+        if (piles != null) {
+            for (Hand pile : piles) {
+                pile.removeAll(true);
+            }
+        }
+        piles = new Hand[2];
+        for (int i = 0; i < 2; i++) {
+            piles[i] = new Hand(deck);
+
+            dm.displayPile(piles[i],i);
+
+//            piles[i] = new Hand(deck);
+//            piles[i].setView(this, new RowLayout(pileLocations[i], 8 * pileWidth));
+//            piles[i].draw();
+            final Hand currentPile = piles[i];
+            final int pileIndex = i;
+            piles[i].addCardListener(new CardAdapter() {
+                public void leftClicked(Card card) {
+                    selectedPileIndex = pileIndex;
+                    currentPile.setTouchEnabled(false);
+                }
+            });
+        }
+
+        this.updatePileRanks();
+    }
+
+//    private void updatePileRankState(int pileIndex, int attackRank, int defenceRank) {
+
+
+//        TextActor currentPile = (TextActor) pileTextActors[pileIndex];
+//        removeActor(currentPile);
+//        String text = playerTeams[pileIndex] + " Attack: " + attackRank + " - Defence: " + defenceRank;
+//        pileTextActors[pileIndex] = new TextActor(text, Color.WHITE, bgColor, smallFont);
+//        addActor(pileTextActors[pileIndex], pileStatusLocations[pileIndex]);
+//    }
+
+    int[] calculatePileRanks(int pileIndex) {
+        Hand currentPile = piles[pileIndex];
+        int i = currentPile.isEmpty() ? 0 : ((GoTCard.Rank) currentPile.get(0).getRank()).getRankValue();
+        return new int[] { i, i };
+    }
+
+    public void updatePileRanks() {
+        for (int j = 0; j <  piles.length; j++) {
+            int[] ranks = calculatePileRanks(j);
+            dm.updatePileRankState(j, ranks[ATTACK_RANK_INDEX], ranks[DEFENCE_RANK_INDEX]);
+        }
+    }
+
     private void executeAPlay() {
         resetPile();
-        boolean secondTurn = false;
+
         nextStartingPlayer = getPlayerIndex(nextStartingPlayer);
-        if (hands[nextStartingPlayer].getNumberOfCardsWithSuit(Suit.HEARTS) == 0)
+        if (hands[nextStartingPlayer].getNumberOfCardsWithSuit(GoTCard.Suit.HEARTS) == 0)
             nextStartingPlayer = getPlayerIndex(nextStartingPlayer + 1);
-        assert hands[nextStartingPlayer].getNumberOfCardsWithSuit(Suit.HEARTS) != 0 : " Starting player has no hearts.";
+        assert hands[nextStartingPlayer].getNumberOfCardsWithSuit(GoTCard.Suit.HEARTS) != 0 : " Starting player has no hearts.";
 
         // 1: play the first 2 hearts
         for (int i = 0; i < 2; i++) {
             int playerIndex = getPlayerIndex(nextStartingPlayer + i);
             setStatusText("Player " + playerIndex + " select a Heart card to play");
             if (humanPlayers[playerIndex]) {
-                waitForCorrectSuit(playerIndex, true, false);
+                waitForCorrectSuit(playerIndex, true);
             } else {
-                pickACorrectSuit(playerIndex, true, false);
+                pickACorrectSuit(playerIndex, true);
             }
 
             int pileIndex = playerIndex % 2;
@@ -427,7 +335,6 @@ public class GameOfThrones extends CardGame {
             selected.get().setVerso(false);
             selected.get().transfer(piles[pileIndex], true); // transfer to pile (includes graphic effect)
             updatePileRanks();
-            secondTurn = true;
         }
 
         // 2: play the remaining nbPlayers * nbRounds - 2
@@ -438,18 +345,9 @@ public class GameOfThrones extends CardGame {
             nextPlayer = getPlayerIndex(nextPlayer);
             setStatusText("Player" + nextPlayer + " select a non-Heart card to play.");
             if (humanPlayers[nextPlayer]) {
-                if(secondTurn) {
-                    waitForCorrectSuit(nextPlayer, false, false);
-                }else{
-                    waitForCorrectSuit(nextPlayer, false, true);
-                }
-
+                waitForCorrectSuit(nextPlayer, false);
             } else {
-                if(secondTurn) {
-                    pickACorrectSuit(nextPlayer, false, false);
-                }else{
-                    pickACorrectSuit(nextPlayer, false, true);
-                }
+                pickACorrectSuit(nextPlayer, false);
             }
 
             if (selected.isPresent()) {
@@ -463,7 +361,6 @@ public class GameOfThrones extends CardGame {
                 selected.get().setVerso(false);
                 selected.get().transfer(piles[selectedPileIndex], true); // transfer to pile (includes graphic effect)
                 updatePileRanks();
-                secondTurn = false;
             } else {
                 setStatusText("Pass.");
             }
@@ -479,8 +376,8 @@ public class GameOfThrones extends CardGame {
         System.out.println("piles[0] is " + "Attack: " + pile0Ranks[ATTACK_RANK_INDEX] + " - Defence: " + pile0Ranks[DEFENCE_RANK_INDEX]);
         System.out.println("piles[1]: " + canonical(piles[1]));
         System.out.println("piles[1] is " + "Attack: " + pile1Ranks[ATTACK_RANK_INDEX] + " - Defence: " + pile1Ranks[DEFENCE_RANK_INDEX]);
-        Rank pile0CharacterRank = (Rank) piles[0].getCardList().get(0).getRank();
-        Rank pile1CharacterRank = (Rank) piles[1].getCardList().get(0).getRank();
+        GoTCard.Rank pile0CharacterRank = (GoTCard.Rank) piles[0].getCardList().get(0).getRank();
+        GoTCard.Rank pile1CharacterRank = (GoTCard.Rank) piles[1].getCardList().get(0).getRank();
         String character0Result;
         String character1Result;
 
@@ -513,10 +410,10 @@ public class GameOfThrones extends CardGame {
         delay(watchingTime);
     }
 
-
     public GameOfThrones() {
         super(700, 700, 30);
 
+        dm =  DisplayManager.getInstance();
         setTitle("Game of Thrones (V" + version + ") Constructed for UofM SWEN30006 with JGameGrid (www.aplu.ch)");
         setStatusText("Initializing...");
         initScore();
@@ -542,29 +439,23 @@ public class GameOfThrones extends CardGame {
     }
 
     public static void main(String[] args) {
-//         System.out.println("Working Directory = " + System.getProperty("user.dir"));
-//         Properties properties = new Properties();
-//         properties.setProperty("watchingTime", "5000");
-//
-//
-//        if (args == null || args.length == 0) {
-//            properties = PropertiesLoader.loadPropertiesFile("cribbage.properties");
-//        } else {
-//              properties = PropertiesLoader.loadPropertiesFile(args[0]);
-//        }
-//
-//        String seedProp = properties.getProperty("seed");  //Seed property
-//        if (seedProp != null) { // Use property seed
-//			  seed = Integer.parseInt(seedProp);
-//        } else { // and no property
-//			  seed = new Random().nextInt(); // so randomise
-//        }
+        // System.out.println("Working Directory = " + System.getProperty("user.dir"));
+        // final Properties properties = new Properties();
+        // properties.setProperty("watchingTime", "5000");
+        /*
+        if (args == null || args.length == 0) {
+            //  properties = PropertiesLoader.loadPropertiesFile("cribbage.properties");
+        } else {
+            //  properties = PropertiesLoader.loadPropertiesFile(args[0]);
+        }
 
-
-
-
-
-
+        String seedProp = properties.getProperty("seed");  //Seed property
+        if (seedProp != null) { // Use property seed
+			  seed = Integer.parseInt(seedProp);
+        } else { // and no property
+			  seed = new Random().nextInt(); // so randomise
+        }
+        */
         GameOfThrones.seed = 130006;
         System.out.println("Seed = " + seed);
         GameOfThrones.random = new Random(seed);
