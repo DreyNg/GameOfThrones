@@ -31,7 +31,9 @@ public class GameOfThrones {
         }
     }
 
-    public String canonical(Card c) { return canonical((GoTCard.Rank) c.getRank()) + canonical((GoTCard.Suit) c.getSuit()); }
+    public String canonical(Card c) {
+        return canonical((GoTCard.Rank) c.getRank()) + canonical((GoTCard.Suit) c.getSuit());
+    }
 
     public String canonical(Hand h) {
         return "[" + h.getCardList().stream().map(this::canonical).collect(Collectors.joining(",")) + "]";
@@ -232,18 +234,6 @@ public class GameOfThrones {
         sm.updatePileRanks(piles);
     }
 
-//    int[] calculatePileRanks(int pileIndex) {
-//        Hand currentPile = piles[pileIndex];
-//        int i = currentPile.isEmpty() ? 0 : ((GoTCard.Rank) currentPile.get(0).getRank()).getRankValue();
-//        return new int[] { i, i };
-//    }
-
-//    public void updatePileRanks() {
-//        for (int j = 0; j <  piles.length; j++) {
-//            int[] ranks = calculatePileRanks(j);
-//            dm.updatePileRankState(j, ranks[ATTACK_RANK_INDEX], ranks[DEFENCE_RANK_INDEX]);
-//        }
-//    }
 
     private void executeAPlay() {
         resetPile();
@@ -303,41 +293,8 @@ public class GameOfThrones {
         }
 
         // 3: calculate winning & update scores for players
-        sm.updatePileRanks(piles);
-        int[] pile0Ranks = sm.calculatePileRanks(0, piles);
-        int[] pile1Ranks = sm.calculatePileRanks(1, piles);
-        System.out.println("piles[0]: " + canonical(piles[0]));
-        System.out.println("piles[0] is " + "Attack: " + pile0Ranks[ATTACK_RANK_INDEX] + " - Defence: " + pile0Ranks[DEFENCE_RANK_INDEX]);
-        System.out.println("piles[1]: " + canonical(piles[1]));
-        System.out.println("piles[1] is " + "Attack: " + pile1Ranks[ATTACK_RANK_INDEX] + " - Defence: " + pile1Ranks[DEFENCE_RANK_INDEX]);
-        GoTCard.Rank pile0CharacterRank = (GoTCard.Rank) piles[0].getCardList().get(0).getRank();
-        GoTCard.Rank pile1CharacterRank = (GoTCard.Rank) piles[1].getCardList().get(0).getRank();
-        String character0Result;
-        String character1Result;
+        sm.checkWin(piles);
 
-        if (pile0Ranks[ATTACK_RANK_INDEX] > pile1Ranks[DEFENCE_RANK_INDEX]) {
-            scores[0] += pile1CharacterRank.getRankValue();
-            scores[2] += pile1CharacterRank.getRankValue();
-            character0Result = "Character 0 attack on character 1 succeeded.";
-        } else {
-            scores[1] += pile1CharacterRank.getRankValue();
-            scores[3] += pile1CharacterRank.getRankValue();
-            character0Result = "Character 0 attack on character 1 failed.";
-        }
-
-        if (pile1Ranks[ATTACK_RANK_INDEX] > pile0Ranks[DEFENCE_RANK_INDEX]) {
-            scores[1] += pile0CharacterRank.getRankValue();
-            scores[3] += pile0CharacterRank.getRankValue();
-            character1Result = "Character 1 attack on character 0 succeeded.";
-        } else {
-            scores[0] += pile0CharacterRank.getRankValue();
-            scores[2] += pile0CharacterRank.getRankValue();
-            character1Result = "Character 1 attack character 0 failed.";
-        }
-        sm.updateScores();
-        System.out.println(character0Result);
-        System.out.println(character1Result);
-        dm.setStatusText(character0Result + " " + character1Result);
 
         // 5: discarded all cards on the piles
         nextStartingPlayer += 1;
