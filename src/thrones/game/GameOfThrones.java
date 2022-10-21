@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 
 @SuppressWarnings("serial")
-public class GameOfThrones extends CardGame {
-//public class GameOfThrones {
+//public class GameOfThrones extends CardGame {
+public class GameOfThrones {
 
 
 
@@ -23,6 +23,7 @@ public class GameOfThrones extends CardGame {
     static public int seed;
     static Random random;
     private DisplayManager dm;
+    private ScoreManager sm;
 
 
     public String canonical(GoTCard.Suit s) { return s.toString().substring(0, 1); }
@@ -82,7 +83,6 @@ public class GameOfThrones extends CardGame {
         }
     }
 
-    private final String version = "1.0";
     public final int nbPlayers = 4;
     public final int nbStartCards = 9;
 	public final int nbPlays = 6;
@@ -110,41 +110,41 @@ public class GameOfThrones extends CardGame {
     boolean[] humanPlayers = { false, false, false, false};
 
 
-    private void initScore() {
-        for (int i = 0; i < nbPlayers; i++) {
-             scores[i] = 0;
-             dm.printScore(i);
-//            String text = "P" + i + "-0";
-//            scoreActors[i] = new TextActor(text, Color.WHITE, bgColor, bigFont);
-//            addActor(scoreActors[i], scoreLocations[i]);
-        }
-
-        dm.printPileText();
-
-//        String text = "Attack: 0 - Defence: 0";
-//        for (int i = 0; i < pileTextActors.length; i++) {
-//            pileTextActors[i] = new TextActor(text, Color.WHITE, bgColor, smallFont);
-//            addActor(pileTextActors[i], pileStatusLocations[i]);
+//    private void initScore() {
+//        for (int i = 0; i < nbPlayers; i++) {
+//             scores[i] = 0;
+//             dm.printScore(i);
+////            String text = "P" + i + "-0";
+////            scoreActors[i] = new TextActor(text, Color.WHITE, bgColor, bigFont);
+////            addActor(scoreActors[i], scoreLocations[i]);
 //        }
-    }
+//
+//        dm.printPileText();
+//
+////        String text = "Attack: 0 - Defence: 0";
+////        for (int i = 0; i < pileTextActors.length; i++) {
+////            pileTextActors[i] = new TextActor(text, Color.WHITE, bgColor, smallFont);
+////            addActor(pileTextActors[i], pileStatusLocations[i]);
+////        }
+//    }
 
 
-    private void updateScore(int player) {
-
-        dm.updateScore(player, scores);
-
-//        removeActor(scoreActors[player]);
-//        String text = "P" + player + "-" + scores[player];
-//        scoreActors[player] = new TextActor(text, Color.WHITE, bgColor, bigFont);
-//        addActor(scoreActors[player], scoreLocations[player]);
-    }
-
-    private void updateScores() {
-        for (int i = 0; i < nbPlayers; i++) {
-            updateScore(i);
-        }
-        System.out.println(playerTeams[0] + " score = " + scores[0] + "; " + playerTeams[1] + " score = " + scores[1]);
-    }
+//    private void updateScore(int player) {
+//
+//        dm.updateScore(player, scores);
+//
+////        removeActor(scoreActors[player]);
+////        String text = "P" + player + "-" + scores[player];
+////        scoreActors[player] = new TextActor(text, Color.WHITE, bgColor, bigFont);
+////        addActor(scoreActors[player], scoreLocations[player]);
+//    }
+//
+//    private void updateScores() {
+//        for (int i = 0; i < nbPlayers; i++) {
+//            updateScore(i);
+//        }
+//        System.out.println(playerTeams[0] + " score = " + scores[0] + "; " + playerTeams[1] + " score = " + scores[1]);
+//    }
 
     private Optional<Card> selected;
     private final int NON_SELECTION_VALUE = -1;
@@ -222,7 +222,7 @@ public class GameOfThrones extends CardGame {
             hands[playerIndex].setTouchEnabled(true);
             do {
                 if (selected == null) {
-                    delay(100);
+                    dm.delay(100);
                     continue;
                 }
                 GoTCard.Suit suit = selected.isPresent() ? (GoTCard.Suit) selected.get().getSuit() : null;
@@ -234,7 +234,7 @@ public class GameOfThrones extends CardGame {
                     selected = null;
                     hands[playerIndex].setTouchEnabled(true);
                 }
-                delay(100);
+                dm.delay(100);
             } while (true);
         }
     }
@@ -245,7 +245,7 @@ public class GameOfThrones extends CardGame {
             pile.setTouchEnabled(true);
         }
         while(selectedPileIndex == NON_SELECTION_VALUE) {
-            delay(100);
+            dm.delay(100);
         }
         for (Hand pile : piles) {
             pile.setTouchEnabled(false);
@@ -322,7 +322,7 @@ public class GameOfThrones extends CardGame {
         // 1: play the first 2 hearts
         for (int i = 0; i < 2; i++) {
             int playerIndex = getPlayerIndex(nextStartingPlayer + i);
-            setStatusText("Player " + playerIndex + " select a Heart card to play");
+            dm.setStatusText("Player " + playerIndex + " select a Heart card to play");
             if (humanPlayers[playerIndex]) {
                 waitForCorrectSuit(playerIndex, true);
             } else {
@@ -343,7 +343,7 @@ public class GameOfThrones extends CardGame {
 
         while(remainingTurns > 0) {
             nextPlayer = getPlayerIndex(nextPlayer);
-            setStatusText("Player" + nextPlayer + " select a non-Heart card to play.");
+            dm.setStatusText("Player" + nextPlayer + " select a non-Heart card to play.");
             if (humanPlayers[nextPlayer]) {
                 waitForCorrectSuit(nextPlayer, false);
             } else {
@@ -351,7 +351,7 @@ public class GameOfThrones extends CardGame {
             }
 
             if (selected.isPresent()) {
-                setStatusText("Selected: " + canonical(selected.get()) + ". Player" + nextPlayer + " select a pile to play the card.");
+                dm.setStatusText("Selected: " + canonical(selected.get()) + ". Player" + nextPlayer + " select a pile to play the card.");
                 if (humanPlayers[nextPlayer]) {
                     waitForPileSelection();
                 } else {
@@ -362,7 +362,7 @@ public class GameOfThrones extends CardGame {
                 selected.get().transfer(piles[selectedPileIndex], true); // transfer to pile (includes graphic effect)
                 updatePileRanks();
             } else {
-                setStatusText("Pass.");
+                dm.setStatusText("Pass.");
             }
             nextPlayer++;
             remainingTurns--;
@@ -400,42 +400,42 @@ public class GameOfThrones extends CardGame {
             scores[2] += pile0CharacterRank.getRankValue();
             character1Result = "Character 1 attack character 0 failed.";
         }
-        updateScores();
+        sm.updateScores();
         System.out.println(character0Result);
         System.out.println(character1Result);
-        setStatusText(character0Result + " " + character1Result);
+        dm.setStatusText(character0Result + " " + character1Result);
 
         // 5: discarded all cards on the piles
         nextStartingPlayer += 1;
-        delay(watchingTime);
+        dm.delay(watchingTime);
     }
 
     public GameOfThrones() {
-        super(700, 700, 30);
+//        super(700, 700, 30);
 
         dm =  DisplayManager.getInstance();
-        setTitle("Game of Thrones (V" + version + ") Constructed for UofM SWEN30006 with JGameGrid (www.aplu.ch)");
-        setStatusText("Initializing...");
-        initScore();
+        sm = new ScoreManager(dm);
+//        initScore();
 
         setupGame();
         for (int i = 0; i < nbPlays; i++) {
             executeAPlay();
-            updateScores();
+            sm.updateScores();
         }
+        dm.printResult(scores);
 
-        String text;
-        if (scores[0] > scores[1]) {
-            text = "Players 0 and 2 won.";
-        } else if (scores[0] == scores[1]) {
-            text = "All players drew.";
-        } else {
-            text = "Players 1 and 3 won.";
-        }
-        System.out.println("Result: " + text);
-        setStatusText(text);
+//        String text;
+//        if (scores[0] > scores[1]) {
+//            text = "Players 0 and 2 won.";
+//        } else if (scores[0] == scores[1]) {
+//            text = "All players drew.";
+//        } else {
+//            text = "Players 1 and 3 won.";
+//        }
+//        System.out.println("Result: " + text);
+//        dm.setStatusText(text);
 
-        refresh();
+        dm.refresh();
     }
 
     public static void main(String[] args) {

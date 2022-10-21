@@ -14,9 +14,13 @@ import java.awt.*;
 
 public class DisplayManager extends CardGame {
     private static DisplayManager instance = new DisplayManager();
+    private final String version = "1.0";
+
 
     private DisplayManager(){
         super(700, 700, 30);
+        setTitle("Game of Thrones (V" + version + ") Constructed for UofM SWEN30006 with JGameGrid (www.aplu.ch)");
+        setStatusText("Initializing...");
     }
     public static DisplayManager getInstance(){
         return instance;
@@ -62,6 +66,19 @@ public class DisplayManager extends CardGame {
 //        setStatusText(s);
 //    }
 
+
+    public void printResult(int[] scores){
+        String text;
+        if (scores[0] > scores[1]) {
+            text = "Players 0 and 2 won.";
+        } else if (scores[0] == scores[1]) {
+            text = "All players drew.";
+        } else {
+            text = "Players 1 and 3 won.";
+        }
+        System.out.println("Result: " + text);
+        this.setStatusText(text);
+    }
 
     public void printScore(int i){
         String text = "P" + i + "-0";
